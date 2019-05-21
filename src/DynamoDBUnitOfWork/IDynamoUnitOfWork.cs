@@ -7,7 +7,7 @@ namespace DynamoDBUnitOfWork
     public interface IDynamoUnitOfWork
     {
         void Start();
-        Task Commit(CancellationToken cancellationToken = CancellationToken.None);
         void AddOperation(TransactWriteItem transactWriteItem);
+        Task<TransactWriteItemsResponse> Commit(string clientRequestToken, CancellationToken cancellationToken = default);
     }
 }
