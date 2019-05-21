@@ -30,7 +30,7 @@ namespace DynamoDBUnitOfWork
             }
             if (_trackedOperations >= Constants.MaximumTransactionOperations)
             {
-                throw new Exception();
+                throw new MaximumTransactionOperationsException();
             }
             _operations.Add(transactWriteItem);
             _trackedOperations++;
@@ -38,6 +38,9 @@ namespace DynamoDBUnitOfWork
 
         public async Task<TransactWriteItemsResponse> Commit(string clientRequestToken, CancellationToken cancellationToken = default)
         {
+            if (_uoWState != UoWState.Started)
+                throw new UnitOfWorkNotStartedException();
+
             var request = new TransactWriteItemsRequest
             {
                 TransactItems = _operations,
@@ -49,7 +52,7 @@ namespace DynamoDBUnitOfWork
 
         public void Start()
         {
-            _operations = new List<TransactWriteItem>(_maximumTransactionOperations);
+            _operations = new List<TransactWriteItem>(Constants.MaximumTransactionOperations);
             _uoWState = UoWState.Started;
             _trackedOperations = 0;
         }
