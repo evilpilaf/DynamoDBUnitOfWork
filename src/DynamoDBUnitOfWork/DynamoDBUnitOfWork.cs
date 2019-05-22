@@ -1,8 +1,8 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using DynamoDBUnitOfWork.Exceptions;
 
-using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,14 +10,13 @@ namespace DynamoDBUnitOfWork
 {
     public sealed class DynamoDBUnitOfWork : IDynamoUnitOfWork
     {
-        private readonly AmazonDynamoDBClient _client;
+        private readonly IAmazonDynamoDB _client;
 
-        private const int _maximumTransactionOperations = 10;
-        private List<TransactWriteItem> _operations;
+        private TransactWriteItem[] _operations;
         private UoWState _uoWState;
         private int _trackedOperations;
 
-        public DynamoDBUnitOfWork(AmazonDynamoDBClient client)
+        public DynamoDBUnitOfWork(IAmazonDynamoDB client)
         {
             _uoWState = UoWState.New;
             _client = client;
@@ -27,20 +26,23 @@ namespace DynamoDBUnitOfWork
         {
             if (_uoWState != UoWState.Started)
             {
-                throw new Exception();
+                throw new UnitOfWorkNotStartedException();
             }
-            if (_trackedOperations >= _maximumTransactionOperations)
+            if (_trackedOperations >= Constants.MaximumTransactionOperations)
             {
-                throw new Exception();
+                throw new MaximumTransactionOperationsException();
             }
-            _operations[++_trackedOperations] = transactWriteItem;
+            _operations[_trackedOperations++] = transactWriteItem;
         }
 
         public async Task<TransactWriteItemsResponse> Commit(string clientRequestToken, CancellationToken cancellationToken = default)
         {
+            if (_uoWState != UoWState.Started)
+                throw new UnitOfWorkNotStartedException();
+
             var request = new TransactWriteItemsRequest
             {
-                TransactItems = _operations,
+                TransactItems = _operations.ToList(),
                 ClientRequestToken = clientRequestToken
             };
             _uoWState = UoWState.Committed;
@@ -49,7 +51,8 @@ namespace DynamoDBUnitOfWork
 
         public void Start()
         {
-            _operations = new List<TransactWriteItem>(_maximumTransactionOperations);
+            //TODO prevent restarting a UoW
+            _operations = new TransactWriteItem[Constants.MaximumTransactionOperations];
             _uoWState = UoWState.Started;
             _trackedOperations = 0;
         }
