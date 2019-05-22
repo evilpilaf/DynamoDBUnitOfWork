@@ -47,6 +47,18 @@ namespace DynamoDBUnitOfWork.Tests
             action.Should().Throw<MaximumTransactionOperationsException>();
         }
 
+        [Fact]
+        public void Start_WhenAUnitOfWorkIsAlredyStarted_ThrowsException()
+        {
+            var sut = CreateSut();
+
+            sut.Start();
+
+            Action action = () => sut.Start();
+
+            action.Should().Throw<OngoingTransactionException>();
+        }
+
         private IDynamoUnitOfWork CreateSut() => new DynamoDBUnitOfWork(_dynamoDBClientMock.Object);
     }
 }
