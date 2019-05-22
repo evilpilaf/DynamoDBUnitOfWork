@@ -51,7 +51,10 @@ namespace DynamoDBUnitOfWork
 
         public void Start()
         {
-            //TODO prevent restarting a UoW
+            if(_uoWState == UoWState.Started)
+            {
+                throw new OngoingTransactionException();
+            }
             _operations = new TransactWriteItem[Constants.MaximumTransactionOperations];
             _uoWState = UoWState.Started;
             _trackedOperations = 0;
