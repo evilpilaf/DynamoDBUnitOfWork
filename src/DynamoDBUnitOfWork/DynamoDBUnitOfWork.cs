@@ -10,13 +10,13 @@ namespace DynamoDBUnitOfWork
 {
     public sealed class DynamoDBUnitOfWork : IDynamoUnitOfWork
     {
-        private readonly AmazonDynamoDBClient _client;
+        private readonly IAmazonDynamoDB _client;
 
         private List<TransactWriteItem> _operations;
         private UoWState _uoWState;
         private int _trackedOperations;
 
-        public DynamoDBUnitOfWork(AmazonDynamoDBClient client)
+        public DynamoDBUnitOfWork(IAmazonDynamoDB client)
         {
             _uoWState = UoWState.New;
             _client = client;
@@ -52,6 +52,7 @@ namespace DynamoDBUnitOfWork
 
         public void Start()
         {
+            //TODO prevent restarting a UoW
             _operations = new List<TransactWriteItem>(Constants.MaximumTransactionOperations);
             _uoWState = UoWState.Started;
             _trackedOperations = 0;

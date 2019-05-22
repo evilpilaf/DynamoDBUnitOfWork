@@ -11,7 +11,7 @@ namespace DynamoDBUnitOfWork.Tests
 {
     public sealed class DynamoDBUnitOfWorkTests
     {
-        private readonly Mock<AmazonDynamoDBClient> _dynamoDBClientMock = new Mock<AmazonDynamoDBClient>();
+        private readonly Mock<IAmazonDynamoDB> _dynamoDBClientMock = new Mock<IAmazonDynamoDB>();
 
         [Fact]
         public void AddOperation_WhenUoWNotStarted_ThrowsException()
