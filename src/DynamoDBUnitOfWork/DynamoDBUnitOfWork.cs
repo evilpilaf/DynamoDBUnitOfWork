@@ -1,8 +1,8 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using DynamoDBUnitOfWork.Exceptions;
-using System;
-using System.Collections.Generic;
+
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,7 +12,7 @@ namespace DynamoDBUnitOfWork
     {
         private readonly IAmazonDynamoDB _client;
 
-        private List<TransactWriteItem> _operations;
+        private TransactWriteItem[] _operations;
         private UoWState _uoWState;
         private int _trackedOperations;
 
@@ -32,9 +32,8 @@ namespace DynamoDBUnitOfWork
             {
                 throw new MaximumTransactionOperationsException();
             }
-            _operations.Add(transactWriteItem);
-            _trackedOperations++;
-    }
+            _operations[_trackedOperations++] = transactWriteItem;
+        }
 
         public async Task<TransactWriteItemsResponse> Commit(string clientRequestToken, CancellationToken cancellationToken = default)
         {
@@ -43,7 +42,7 @@ namespace DynamoDBUnitOfWork
 
             var request = new TransactWriteItemsRequest
             {
-                TransactItems = _operations,
+                TransactItems = _operations.ToList(),
                 ClientRequestToken = clientRequestToken
             };
             _uoWState = UoWState.Committed;
@@ -53,7 +52,7 @@ namespace DynamoDBUnitOfWork
         public void Start()
         {
             //TODO prevent restarting a UoW
-            _operations = new List<TransactWriteItem>(Constants.MaximumTransactionOperations);
+            _operations = new TransactWriteItem[Constants.MaximumTransactionOperations];
             _uoWState = UoWState.Started;
             _trackedOperations = 0;
         }
