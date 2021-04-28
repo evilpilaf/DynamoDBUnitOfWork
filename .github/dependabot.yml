@@ -1,0 +1,30 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: AWSSDK.DynamoDBv2
+    versions:
+    - 3.5.4.20
+    - 3.5.4.24
+    - 3.5.4.26
+    - 3.5.4.29
+    - 3.5.4.30
+    - 3.5.4.31
+    - 3.5.4.34
+    - 3.5.4.35
+    - 3.5.4.37
+    - 3.7.0.10
+    - 3.7.0.13
+    - 3.7.0.2
+    - 3.7.0.8
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.8.3
+    - 16.9.1
+  - dependency-name: Moq
+    versions:
+    - 4.16.0
